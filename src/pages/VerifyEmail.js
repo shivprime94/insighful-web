@@ -1,81 +1,107 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { verifyEmail, getDownloadUrl } from '../services/api';
-import { getQueryParams } from '../utils/helpers';
-import Loading from '../components/common/Loading';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { verifyEmail } from '../services/api';
+import '../styles/VerifyEmail.css';
 
 const VerifyEmail = () => {
-  const [verificationStatus, setVerificationStatus] = useState('loading'); // loading, success, error
-  const [message, setMessage] = useState('Verifying your email...');
-  
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [verificationStatus, setVerificationStatus] = useState({
+    loading: true,
+    success: false,
+    message: 'Verifying your email...',
+    downloadUrls: null
+  });
+
   useEffect(() => {
-    const { token } = getQueryParams();
-    
-    if (!token) {
-      setVerificationStatus('error');
-      setMessage('No verification token provided. Please check your email for the correct verification link.');
-      return;
-    }
-    
-    const doVerification = async () => {
+    const performVerification = async () => {
       try {
-        const result = await verifyEmail(token);
-        setVerificationStatus('success');
-        setMessage(result.message || 'Email verified successfully!');
+        // Get token from query parameters
+        const queryParams = new URLSearchParams(location.search);
+        const token = queryParams.get('token');
+        
+        if (!token) {
+          throw new Error('Verification token is missing');
+        }
+        
+        const response = await verifyEmail(token);
+        setVerificationStatus({
+          loading: false,
+          success: true,
+          message: response.message,
+          downloadUrls: response.downloadUrls
+        });
       } catch (error) {
-        setVerificationStatus('error');
-        setMessage(error.message || 'Failed to verify email. Please try again or contact support.');
+        console.error('Verification error:', error);
+        setVerificationStatus({
+          loading: false,
+          success: false,
+          message: error.response?.data?.message || 'Email verification failed.',
+          downloadUrls: null
+        });
       }
     };
+
+    performVerification();
+  }, [location.search]);
+
+  const getDownloadUrl = () => {
+    if (!verificationStatus.downloadUrls) return '#';
     
-    doVerification();
-  }, []);
-  
-  if (verificationStatus === 'loading') {
-    return (
-      <div className="container">
-        <div className="verify-email-page">
-          <Loading message="Verifying your email..." />
-        </div>
-      </div>
-    );
-  }
-  
+    const isMac = navigator.platform.indexOf('Mac') !== -1;
+    return isMac ? 
+      verificationStatus.downloadUrls.mac : 
+      verificationStatus.downloadUrls.windows;
+  };
+
+  const getPlatformName = () => {
+    if (navigator.platform.indexOf('Mac') !== -1) return 'macOS';
+    if (navigator.platform.indexOf('Win') !== -1) return 'Windows';
+    return 'Desktop';
+  };
+
   return (
-    <div className="container">
-      <div className="verify-email-page">
+    <div className="verify-email-container">
+      <div className="verify-card">
         <h1>Email Verification</h1>
         
-        {verificationStatus === 'success' ? (
-          <div className="success-message">
-            <p>{message}</p>
-            
-            <div className="download-section">
-              <h2>Download Time Tracker App</h2>
-              <p>Track your work hours efficiently with our desktop application.</p>
-              
-              <a 
-                href={getDownloadUrl()} 
-                className="download-button"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Download for {navigator.platform.indexOf('Mac') !== -1 ? 'macOS' : 'Windows'}
-              </a>
-              
-              <p className="download-note">
-                After downloading, install the application and log in with your verified email address.
-              </p>
-            </div>
-          </div>
+        {verificationStatus.loading ? (
+          <div className="loading-spinner"></div>
         ) : (
-          <div className="error-message">
-            <p>{message}</p>
-            <p>
-              If you continue to experience issues, please contact your administrator
-              or return to the <Link to="/">home page</Link>.
-            </p>
-          </div>
+          <>
+            <div className={`status-message ${verificationStatus.success ? 'success' : 'error'}`}>
+              {verificationStatus.message}
+            </div>
+            
+            {verificationStatus.success && (
+              <div className="download-section">
+                <h2>Download Time Tracker App</h2>
+                <p>Track your work hours efficiently with our desktop application.</p>
+                
+                <a 
+                  href={getDownloadUrl()} 
+                  className="download-button"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Download for {getPlatformName()}
+                </a>
+                
+                <p className="version-info">Version 1.0.0</p>
+                
+                <p className="download-note">
+                  After downloading, install the application and log in with your verified email address.
+                </p>
+              </div>
+            )}
+            
+            <button 
+              onClick={() => navigate('/login')} 
+              className="login-button"
+            >
+              Go to Login
+            </button>
+          </>
         )}
       </div>
     </div>
