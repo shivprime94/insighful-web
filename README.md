@@ -14,8 +14,7 @@ A React-based web application for Time Tracker that provides employee email veri
 - [Development](#development)
   - [Available Scripts](#available-scripts)
   - [Project Structure](#project-structure)
-- [Deployment](#deployment)
-- [Integration with the Time Tracker System](#integration-with-the-time-tracker-system)
+
 
 ## Overview
 
@@ -68,4 +67,49 @@ npm install
 ### Environment Setup
 
 Create a `.env` file in the root directory with the following variables:
+
+```
+REACT_APP_API_URL=http://localhost:3001/api
+REACT_APP_DESKTOP_APP_DOWNLOAD_URL=http://localhost:3001/public/download/time-tracker-desktop.dmg
+```
+
+## Development
+
+### Available Scripts
+
+In the project directory, you can run:
+
+- `npm start`: Runs the app in development mode at http://localhost:3000
+- `npm test`: Launches the test runner in interactive watch mode
+- `npm run build`: Builds the app for production to the `build` folder
+- `npm run eject`: Removes the single build dependency from your project
+
+### Project Structure
+
+```
+time-tracker/web-app/
+├── public/             # Static files
+│   ├── favicon.ico
+│   ├── index.html
+│   ├── logo192.png
+│   ├── logo512.png
+│   └── manifest.json
+├── src/                # Source files
+│   ├── assets/         # Images, fonts, etc.
+│   ├── components/     # Reusable components
+│   ├── contexts/       # React contexts
+│   ├── hooks/          # Custom React hooks
+│   ├── pages/          # Page components
+│   ├── services/       # API service functions
+│   ├── styles/         # Global styles
+│   ├── utils/          # Utility functions
+│   ├── App.js          # App component
+│   ├── App.css         # App styles
+│   ├── index.js        # Entry point
+│   └── reportWebVitals.js # Performance monitoring
+├── .env                # Environment variables
+├── .gitignore
+├── package.json
+└── README.md
+```
 
